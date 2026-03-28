@@ -7,6 +7,7 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 
 public class Eco implements CommandExecutor {
 
@@ -25,7 +26,13 @@ public class Eco implements CommandExecutor {
                 sender.sendMessage("§e - /eco take <name> <amount>");
                 return true;
             } else if (args.length == 3) {
-                OfflinePlayer target = Bukkit.getOfflinePlayer(args[1]);
+                Player target = Bukkit.getPlayer(args[1]);
+
+                if (target == null) {
+                    sender.sendMessage("§cThe player was not online!");
+                    return true;
+                }
+
                 try {
                     double amount = Double.parseDouble(args[2]);
                     if (args[0].equals("give")) {

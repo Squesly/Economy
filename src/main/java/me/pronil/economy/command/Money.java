@@ -49,7 +49,13 @@ public class Money implements CommandExecutor {
                     sender.sendMessage("§cInvalid arguments! Please use /money <name>");
                 }
             } else if (sender.hasPermission("economy.money.name")) {
-                OfflinePlayer target = Bukkit.getOfflinePlayer(args[0]);
+                Player target = Bukkit.getPlayer(args[0]);
+
+                if (target == null) {
+                    sender.sendMessage("§cThe player was not online!");
+                    return true;
+                }
+
                 if (main.getAccounts().hasAccount(target)) {
                     Account account = main.getAccounts().getAccount(target);
                     sender.sendMessage(main.getMoneyPlayer().replace("%money%", main.formatCurrency(account.getBalance())).replace("%name%", target.getName()));
