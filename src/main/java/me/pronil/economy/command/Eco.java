@@ -24,7 +24,51 @@ public class Eco implements CommandExecutor {
                 sender.sendMessage("§e - /eco give <name> <amount>");
                 sender.sendMessage("§e - /eco set <name> <amount>");
                 sender.sendMessage("§e - /eco take <name> <amount>");
+                sender.sendMessage("§e - /eco migrate");
                 return true;
+            } else if (args.length == 1) {
+                if (args[0].equalsIgnoreCase("migrate")) {
+                    if (!sender.hasPermission("economy.admin")) {
+                        sender.sendMessage(main.getPermission());
+                        return true;
+                    }
+                    if (!main.isMySQL()) {
+                        sender.sendMessage("§cMigration can only be done while MySQL is enabled!");
+                        return true;
+                    }
+
+                    sender.sendMessage("§aStarting migration from SQLite to MySQL...");
+                    
+                    main.getExecutor().execute(() -> {
+                        try {
+                            me.pronil.economy.database.Database sqliteDb = new me.pronil.economy.database.Database(main, main.getDataFolder());
+                            java.util.List<Account> accounts = sqliteDb.getAllAccounts();
+                            sqliteDb.close();
+
+                            if (accounts.isEmpty()) {
+                                sender.sendMessage("§cNo data found in SQLite database!");
+                                return;
+                            }
+
+                            int count = 0;
+                            for (Account account : accounts) {
+                                if (!main.getSQLDatabase().hasAccount(account)) {
+                                    main.getSQLDatabase().createAccount(account);
+                                    count++;
+                                } else {
+                                    main.getSQLDatabase().updateAccount(account);
+                                    count++;
+                                }
+                            }
+
+                            sender.sendMessage("§aMigration completed! §f" + count + " §aaccounts migrated.");
+                        } catch (Exception e) {
+                            sender.sendMessage("§cMigration failed: " + e.getMessage());
+                            e.printStackTrace();
+                        }
+                    });
+                    return true;
+                }
             } else if (args.length == 3) {
                 Player target = Bukkit.getPlayer(args[1]);
 
