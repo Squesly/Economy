@@ -5,6 +5,7 @@ import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import me.pronil.economy.account.Accounts;
 import me.pronil.economy.command.Money;
@@ -50,6 +51,10 @@ public class Economy extends JavaPlugin {
     private String currencyformat;
     private String top_all_money;
     private VaultHook vault_hook;
+
+    public boolean isMySQL() {
+        return getConfig().getBoolean("MySQL.Enabled");
+    }
 
     public void onEnable() {
         ConsoleCommandSender console = getServer().getConsoleSender();
@@ -143,9 +148,19 @@ public class Economy extends JavaPlugin {
 
     public void onDisable() {
         if (database != null) {
-            getServer().getServicesManager().unregister(vault_hook);
+            if (vault_hook != null) {
+                getServer().getServicesManager().unregister(vault_hook);
+            }
             Bukkit.getOnlinePlayers().forEach(p -> accounts.onQuit(p));
-            executor.shutdownNow().forEach(r -> r.run());
+            executor.shutdown();
+            try {
+                if (!executor.awaitTermination(5, TimeUnit.SECONDS)) {
+                    executor.shutdownNow();
+                }
+            } catch (InterruptedException e) {
+                executor.shutdownNow();
+                Thread.currentThread().interrupt();
+            }
             database.close();
         }
     }
